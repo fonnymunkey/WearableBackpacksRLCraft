@@ -6,15 +6,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import net.mcft.copy.backpacks.misc.util.MiscUtils;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -33,7 +30,6 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensio
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 
-import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.api.BackpackHelper;
 import net.mcft.copy.backpacks.api.BackpackRegistry;
 import net.mcft.copy.backpacks.api.IBackpack;
@@ -41,7 +37,6 @@ import net.mcft.copy.backpacks.api.IBackpackData;
 import net.mcft.copy.backpacks.api.IBackpackType;
 import net.mcft.copy.backpacks.api.BackpackRegistry.BackpackEntry;
 import net.mcft.copy.backpacks.block.entity.TileEntityBackpack;
-import net.mcft.copy.backpacks.container.SlotBackpackWrapper;
 import net.mcft.copy.backpacks.item.DyeWashingHandler;
 import net.mcft.copy.backpacks.misc.BackpackCapability;
 import net.mcft.copy.backpacks.misc.util.NbtUtils;
@@ -52,7 +47,6 @@ public class ProxyCommon {
 
 	public void preInit() {
 		MinecraftForge.EVENT_BUS.register(this);
-		MinecraftForge.EVENT_BUS.register(WearableBackpacks.CONFIG);
 		MinecraftForge.EVENT_BUS.register(WearableBackpacks.CONTENT);
 		MinecraftForge.EVENT_BUS.register(new DyeWashingHandler());
 
@@ -101,8 +95,7 @@ public class ProxyCommon {
 	@SubscribeEvent
 	public void onCheckSpawn(CheckSpawn event) {
 		// When a mob is about to spawn, see if it has a chance to wear a backpack.
-		if (!(event.isSpawner() ? WearableBackpacks.CONFIG.entity.spawnFromSpawners
-		                        : WearableBackpacks.CONFIG.entity.spawnNaturally).get()) return;
+		if(!(event.isSpawner() ? ModConfig.server.spawnFromSpawners : ModConfig.server.spawnNaturally)) return;
 		EntityLivingBase entity = event.getEntityLiving();
 
 		for (BackpackEntry entry : BackpackRegistry.getBackpackEntries(entity.getClass())) {
@@ -126,23 +119,6 @@ public class ProxyCommon {
 		int damage = maxDamage / 4 + ((maxDamage / 2 > 0)
 			? entity.world.rand.nextInt(maxDamage / 2) : 0);
 		stack.setItemDamage(damage);
-
-		if (BackpackHelper.equipAsChestArmor) {
-			// If the entity spawned with enchanted armor,
-			// then move over all compatible enchantments.
-			ItemStack armor = entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
-			if ((armor != null) && armor.isItemEnchanted()) {
-				NBTTagList enchList = armor.getEnchantmentTagList();
-				for (int i = 0; i < enchList.tagCount(); ++i) {
-					NBTTagCompound enchTag = enchList.getCompoundTagAt(i);
-					Enchantment enchantment = Enchantment.getEnchantmentByID(enchTag.getShort("id"));
-					// If the enchantment doesn't work with the backpack, remove it.
-					if (!enchantment.canApply(stack)) enchList.removeTag(i--);
-				}
-				if (enchList.tagCount() > 0)
-					NbtUtils.set(stack, enchList, "ench");
-			}
-		}
 
 		IBackpackType type = entry.getBackpackItem();
 		IBackpackData data = type.createBackpackData(stack);
@@ -198,8 +174,7 @@ public class ProxyCommon {
 
 		// When players right-click equipped backpacks, interact with them.
 
-		if (!WearableBackpacks.CONFIG.enableEquippedInteraction.get() ||
-		    !(event.getTarget() instanceof EntityLivingBase)) return;
+		if(!ModConfig.server.enableEquippedInteraction || !(event.getTarget() instanceof EntityLivingBase)) return;
 		EntityPlayer player = event.getEntityPlayer();
 		EntityLivingBase target = (EntityLivingBase)event.getTarget();
 
@@ -239,11 +214,11 @@ public class ProxyCommon {
 			onSpawnedWith(entity, backpack, backpack.spawnWith);
 		boolean hasBackpack = !backpack.getStack().isEmpty();
 
-		if (backpack.isChestArmor()) {
-			if (entity instanceof EntityPlayer)
-				SlotBackpackWrapper.replace((EntityPlayer)entity, backpack.getStack());
+		if(backpack.isBauble()) {
+			//Not needed anymore, replaced by canUnequip in ItemBackpack
+			//if(entity instanceof EntityPlayer) SlotBackpackWrapper.replace((EntityPlayer)entity, backpack.getStack());
 
-			if (!hasBackpack) {
+			if(!hasBackpack) {
 				// Backpack has been removed somehow.
 				backpack.getType().onFaultyRemoval(entity, backpack);
 				backpack.setStack(ItemStack.EMPTY);
@@ -254,7 +229,6 @@ public class ProxyCommon {
 		backpack.getType().onEquippedTick(entity, backpack);
 		if (entity.world.isRemote)
 			BackpackHelper.updateLidTicks(backpack, entity.posX, entity.posY + 1.0, entity.posZ);
-
 	}
 
 	@SubscribeEvent
@@ -276,7 +250,7 @@ public class ProxyCommon {
 		if (MiscUtils.shouldKeepItem(entity, backpack.getStack())) return;
 
 		// Attempt to place the backpack as a block instead of dropping the items.
-		if (WearableBackpacks.CONFIG.dropAsBlockOnDeath.get()) {
+		if(ModConfig.server.dropAsBlockOnDeath) {
 
 			List<BlockCoord> coords = new ArrayList<BlockCoord>();
 			for (int x = -2; x <= 2; x++)

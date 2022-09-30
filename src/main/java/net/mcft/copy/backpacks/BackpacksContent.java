@@ -23,8 +23,7 @@ public class BackpacksContent {
 	public static ItemBackpack BACKPACK;
 	
 	public BackpacksContent() {
-		if (WearableBackpacks.CONFIG.backpack.enabled.get())
-			BACKPACK = new ItemBackpack();
+		BACKPACK = new ItemBackpack();
 	}
 	
 	@SubscribeEvent

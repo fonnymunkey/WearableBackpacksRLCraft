@@ -8,7 +8,6 @@ import net.minecraft.stats.StatList;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import net.mcft.copy.backpacks.item.IDyeableItem;
 import net.mcft.copy.backpacks.misc.util.NbtUtils;
 
 public class DyeWashingHandler {

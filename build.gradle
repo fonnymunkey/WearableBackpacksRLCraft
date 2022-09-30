@@ -1,30 +1,45 @@
 buildscript {
-  repositories {
-    jcenter()
-    maven { url = 'http://files.minecraftforge.net/maven' }
-  }
-  dependencies {
-    classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-  }
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+		mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+    }
 }
-
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle'
 
 version = mod_version
 group = 'net.mcft.copy.backpacks'
-archivesBaseName = "${rootProject.name}-$mc_version"
-sourceCompatibility = JavaVersion.VERSION_1_8
+archivesBaseName = "${rootProject.name}-RLCraft-$mc_version"
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-  version = forge_version
-  mappings = mcp_mappings
-  runDir = 'run'
-  replace '@VERSION@', project.version
-}
+  mappings channel: 'stable', version: '39-1.12'
+  
+  runs {
+        client {
+            workingDirectory project.file('run')
 
-jar {
-  from sourceSets.main.output
-  from sourceSets.api.output
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+        }
+
+        server {
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+	
+  //replace '@VERSION@', project.version
 }
 
 repositories {
@@ -32,10 +47,21 @@ repositories {
     name 'asie dependency mirror'
     artifactPattern 'http://asie.pl/javadeps/[module]-[revision](-[classifier]).[ext]'
   }
+  maven {
+        name = 'CurseForge'
+        url = 'https://minecraft.curseforge.com/api/maven/'
+    }
 }
 
 dependencies {
-  deobfCompile name: 'InventoryTweaks', version: "$invtweaks_version-api"
+  minecraft "net.minecraftforge:forge:${forge_version}"
+  
+  compile name: 'InventoryTweaks', version: "$invtweaks_version-api"
+  compile "com.azanor.baubles:Baubles:${baubles_version}"
+}
+
+sourceSets {
+    main { output.resourcesDir = output.classesDir }
 }
 
 processResources {
@@ -50,20 +76,4 @@ processResources {
   from(sourceSets.main.resources.srcDirs) {
     exclude "mcmod.info"
   }
-}
-
-task sourcesJar(type: Jar) {
-  classifier = 'sources'
-  from sourceSets.main.allJava
-  from sourceSets.api.allJava
-}
-
-task apiJar(type: Jar) {
-  classifier = 'api'
-  from sourceSets.api.output
-}
-
-artifacts {
-  archives sourcesJar
-  archives apiJar
 }

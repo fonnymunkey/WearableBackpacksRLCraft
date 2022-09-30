@@ -1,5 +1,6 @@
 package net.mcft.copy.backpacks.client;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.settings.KeyBinding;
@@ -31,9 +32,7 @@ public class KeyBindingHandler {
 	
 	@SubscribeEvent
 	public void onKey(KeyInputEvent event) {
-		if (openBackpack.isPressed() &&
-		    (BackpackHelper.getBackpack(ClientUtils.getPlayer()) != null) &&
-		    WearableBackpacks.CONFIG.enableSelfInteraction.get())
+		if(openBackpack.isPressed() && BackpackHelper.getBackpack(ClientUtils.getPlayer()) != null && ModConfig.server.enableSelfInteraction)
 			WearableBackpacks.CHANNEL.sendToServer(MessageOpenBackpack.create());
 	}
 	

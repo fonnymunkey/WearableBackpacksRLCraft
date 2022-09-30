@@ -1,5 +1,9 @@
 package net.mcft.copy.backpacks.api;
 
+import baubles.api.BaublesApi;
+import net.mcft.copy.backpacks.config.ModConfig;
+import net.mcft.copy.backpacks.item.ItemBackpack;
+import net.minecraftforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,7 +15,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -38,9 +41,6 @@ public final class BackpackHelper {
 	/** The maximum angle from which an equipped backpack can be opened. */
 	public static double INTERACT_MAX_ANGLE = 110;
 	
-	/** Controlled by a WearableBackpacks config setting. Don't change this, please. */
-	public static boolean equipAsChestArmor = true;
-	
 	public static Logger LOG = LogManager.getLogger("wearablebackpacks:api");
 	
 	
@@ -65,13 +65,33 @@ public final class BackpackHelper {
 	
 	/** Returns if the entity can equip a backpack right now.
 	 *  Requires the entity to be able to wear backpacks, not currently have a backpack equipped, and
-	 *  if {@link equipAsChestArmor} is true and the entity is a player, an empty chest armor slot. */
+	 *  if equipAsBauble is true and the entity is a player, an empty body bauble slot. */
 	public static boolean canEquipBackpack(EntityLivingBase entity) {
-		return (entity.getCapability(IBackpack.CAPABILITY, null) != null) // Has backpack capability.
-			&& (getBackpack(entity) == null)                              // Doesn't currently have backpack equipped.
-			&& !(equipAsChestArmor && (entity instanceof EntityPlayer)    // Isn't wearing a chestplate while equipAsChestArmor is on.
-				&& !entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST).isEmpty());
-		// FIXME: How does this work with non-player entities? Do / should they always wear backpacks as armor or what?
+		return  (entity.getCapability(IBackpack.CAPABILITY, null) != null) //Has backpack capability
+				&&
+				(getBackpack(entity) == null) //Does not have a backpack
+				&&
+				!(ModConfig.server.equipAsBauble && entity instanceof EntityPlayer && !isBackpackBaubleSlotEmpty((EntityPlayer)entity)); //If equip as bauble, and a player, there must be an empty bauble slot
+	}
+
+	/** Returns if the player's backpack bauble slot is empty */
+	public static boolean isBackpackBaubleSlotEmpty(EntityPlayer player) {
+		return getBackpackBaubleSlotItemStack(player).isEmpty();
+	}
+
+	/** Returns the itemstack of the item in the backpack bauble slot */
+	public static ItemStack getBackpackBaubleSlotItemStack(EntityPlayer player) {
+		return BaublesApi.getBaublesHandler(player).getStackInSlot(getBackpackBaubleSlotIndex());
+	}
+
+	/** Sets the itemstack of the backpack bauble slot */
+	public static void setBackpackBaubleSlotItemStack(EntityPlayer player, ItemStack stack) {
+		((ItemStackHandler)BaublesApi.getBaublesHandler(player)).setStackInSlot(getBackpackBaubleSlotIndex(), stack);
+	}
+
+	/** Returns the bauble slot index of the slot that can contain a backpack */
+	public static int getBackpackBaubleSlotIndex() {
+		return ItemBackpack.getBaubleType().getValidSlots()[0];
 	}
 	
 	/** Sets the entity's equipped backpack and data. */

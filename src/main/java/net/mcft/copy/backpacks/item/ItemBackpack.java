@@ -1,5 +1,8 @@
 package net.mcft.copy.backpacks.item;
 
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
+import baubles.common.container.ContainerPlayerExpanded;
 import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.api.BackpackHelper;
 import net.mcft.copy.backpacks.api.BackpackRegistry;
@@ -7,6 +10,7 @@ import net.mcft.copy.backpacks.api.IBackpack;
 import net.mcft.copy.backpacks.api.IBackpackData;
 import net.mcft.copy.backpacks.api.IBackpackType;
 import net.mcft.copy.backpacks.client.KeyBindingHandler;
+import net.mcft.copy.backpacks.config.ModConfig;
 import net.mcft.copy.backpacks.container.ContainerBackpack;
 import net.mcft.copy.backpacks.misc.BackpackDataItems;
 import net.mcft.copy.backpacks.misc.BackpackSize;
@@ -18,27 +22,23 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnumEnchantmentType;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ISpecialArmor;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.Level;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ import java.util.List;
 //       - Supply II: Automatically replaces broken items (and allow middle click to pull from backpack?)
 //       - Demand: If a picked up item is stackable and would occupy a new stack in the player's inventory, see
 //                 if there's already a non-full stack of it in the backpack, if so pick it up into the backpack.
-public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, ISpecialArmor {
+public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, IBauble {
 	
 	public static final int DEFAULT_COLOR = 0xA06540;
 	public static final ResourceLocation LOOT_TABLE =
@@ -63,16 +63,32 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		setMaxStackSize(1);
 		setCreativeTab(CreativeTabs.TOOLS); // TODO: Use our own creative tab?
 	}
-	
-	public int getArmorDamageReductionAmount(ItemStack stack) {
-		int defaultArmor = WearableBackpacks.CONFIG.backpack.armor.get();
-		return NbtUtils.get(stack, defaultArmor, TAG_CUSTOM_ARMOR);
+
+	// Bauble Implementation
+	@Override
+	public BaubleType getBaubleType(ItemStack stack) {
+		return getBaubleType();
 	}
-	
-	public float getArmorToughness(ItemStack stack) { return 0; }
-	
+
+	public static BaubleType getBaubleType() {
+		return BaubleType.BODY;
+	}
+
+	// Let placing manually handle unequipping
+	@Override
+	public boolean canUnequip(ItemStack itemStack, EntityLivingBase player) {
+		return false;
+	}
+
+	// Let breaking manually handle equipping
+	// Prevents player from manually placing backpack into ContainerPlayerExpanded, hopefully doesn't cause issues
+	@Override
+	public boolean canEquip(ItemStack itemStack, EntityLivingBase player) {
+		if(player instanceof EntityPlayer && ((EntityPlayer)player).openContainer instanceof ContainerPlayerExpanded) return false;
+		return true;
+	}
+
 	// Item properties
-	
 	@Override
 	public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
 		if (repair.isEmpty()) return false;
@@ -82,19 +98,7 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		int leatherOreID = OreDictionary.getOreID("leather");
 		return ArrayUtils.contains(OreDictionary.getOreIDs(repair), leatherOreID);
 	}
-	
-	@Override
-	public boolean isEnchantable(ItemStack stack) {
-		// Only enchantable if backpack is equipped as chest armor.
-		// Otherwise unbreaking and protection enchantments are useless.
-		return BackpackHelper.equipAsChestArmor;
-		// Also needs to be overridden because otherwise 0
-		// durability considers the backpack unenchantable.
-	}
-	
-	@Override
-	public int getItemEnchantability() { return 12; }
-	
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
@@ -105,20 +109,20 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		// If the shift key is held down, display equip / unequip hints,
 		// otherwise just display "Hold SHIFT for more info" message.
 		if (LangUtils.tooltipIsShiftKeyDown(tooltip)) {
-			boolean equipAsChestArmor = WearableBackpacks.CONFIG.equipAsChestArmor.get();
-			boolean enableSelfInteraction = WearableBackpacks.CONFIG.enableSelfInteraction.get();
+			boolean equipAsBauble = ModConfig.server.equipAsBauble;
+			boolean enableSelfInteraction = ModConfig.server.enableSelfInteraction;
 			
 			// If own backpacks can be interacted with while equipped and one is either
-			// currently equipped or won't be equipped as chest armor, display open hint.
+			// currently equipped or won't be equipped as bauble, display open hint.
 			// Does not display anything if key is unbound.
-			if (enableSelfInteraction && (isEquipped || !equipAsChestArmor))
+			if (enableSelfInteraction && (isEquipped || !equipAsBauble))
 				LangUtils.formatTooltipKey(tooltip, "openHint", KeyBindingHandler.openBackpack);
 			
 			// If the backpack is the player's currently equipped backpack, display unequip hint.
 			if (isEquipped) LangUtils.formatTooltip(tooltip, "unequipHint");
-			// If not equipped, display the equip hint. If equipAsChestArmor is off,
+			// If not equipped, display the equip hint. If equipAsBauble is off,
 			// use extended tooltip, which also explains how to unequip the backpack.
-			else LangUtils.formatTooltip(tooltip, "equipHint" + (!equipAsChestArmor ? ".extended" : ""));
+			else LangUtils.formatTooltip(tooltip, "equipHint" + (!equipAsBauble ? ".extended" : ""));
 		}
 		
 		// If someone's using the player's backpack right now, display it in the tooltip.
@@ -181,23 +185,10 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		return true;
 	}
 	
-	@Override
-	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment) {
-		// Allow armor enchantments on top of anything supported by default.
-		return (super.canApplyAtEnchantingTable(stack, enchantment) ||
-		        ((enchantment.type == EnumEnchantmentType.ARMOR) && BackpackHelper.equipAsChestArmor));
-	}
-	
 	// IBackpackType implementation
 	
 	@Override
 	public void onSpawnedWith(EntityLivingBase entity, IBackpack backpack, String lootTable) {
-		
-		// If backpack is equipped in chestplate slot, set drop chance to 100%.
-		if ((entity instanceof EntityLiving) &&
-		    (entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST) == backpack.getStack()))
-			((EntityLiving)entity).setDropChance(EntityEquipmentSlot.CHEST, 1.0F);
-		
 		// Set backpack's loot table.
 		IBackpackData data = backpack.getData();
 		if ((lootTable != null) && (data instanceof BackpackDataItems))
@@ -260,7 +251,7 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 	
 	@Override
 	public IBackpackData createBackpackData(ItemStack stack) {
-		BackpackSize size = WearableBackpacks.CONFIG.backpack.size.get();
+		BackpackSize size = ModConfig.server.getBackpackSize();
 		
 		// Custom size can be specified in stack's NBT data.
 		NBTBase customSize = NbtUtils.get(stack, TAG_CUSTOM_SIZE);
@@ -271,53 +262,6 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		
 		return new BackpackDataItems(size);
 	}
-	
-	// ISpecialArmor implementation
-	
-	public ArmorProperties getProperties(EntityLivingBase player, ItemStack armor,
-	                                     DamageSource source, double damage, int slot) {
-		ArmorProperties prop = new ArmorProperties(0, 0.0, 0);
-		ItemBackpack backpack = (ItemBackpack)armor.getItem();
-		prop.Armor       = backpack.getArmorDamageReductionAmount(armor);
-		prop.Toughness   = backpack.getArmorToughness(armor);
-		prop.AbsorbRatio = prop.Armor / 25.0;
-		prop.AbsorbMax   = Math.max(1, armor.getMaxDamage() - armor.getItemDamage() + 1);
-		return prop;
-	}
-	
-	public int getArmorDisplay(EntityPlayer player, ItemStack armor, int slot)
-		{ return ((ItemBackpack)armor.getItem()).getArmorDamageReductionAmount(armor); }
-	
-	public void damageArmor(EntityLivingBase entity, ItemStack stack,
-	                        DamageSource source, int damage, int slot) {
-		stack.damageItem(damage, entity);
-		if (!stack.isEmpty()) return;
-		// If backpack breaks while equipped, call onEquippedBroken.
-		IBackpack backpack = BackpackHelper.getBackpack(entity);
-		if (backpack == null) return;
-		backpack.getType().onEquippedBroken(entity, backpack);
-	}
-	
-	// Can't really use attribute modifiers and ISpecialArmor together T_T
-	// All we need from ISpecialArmor is damageArmor. A similar damageItem method on
-	// Item which includes the entity that is wearing the backpack would work, too.
-	/*
-	@Override
-	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack) {
-		Multimap<String, AttributeModifier> modifiers = HashMultimap.create();
-		boolean equipAsChestArmor = WearableBackpacks.CONFIG.equipAsChestArmor.get();
-		if (equipAsChestArmor && (slot == EntityEquipmentSlot.CHEST)) {
-			ItemBackpack backpack = (ItemBackpack)stack.getItem();
-			modifiers.put(SharedMonsterAttributes.ARMOR.getName(), new AttributeModifier(
-				UUID.fromString("E8B05077-6027-49D5-A895-9E37D20E45DC"),
-				"Armor modifier", backpack.getArmorDamageReductionAmount(stack), 0));
-			modifiers.put(SharedMonsterAttributes.ARMOR_TOUGHNESS.getName(), new AttributeModifier(
-				UUID.fromString("5131DA7B-E863-4E7F-B9A1-493F72A55DE2"),
-				"Armor toughness", backpack.getArmorToughness(stack), 0));
-		}
-		return modifiers;
-	}
-	*/
 	
 	// When changing the maximum backpack durability in WBs' config to 0,
 	// any already damaged backpacks would simply turn invalid due to their
@@ -348,8 +292,9 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		super.setDamage(stack, damage);
 	}
 	
-	/** Returns if this backpack can't be damaged. */
+	/** Returns if this backpack can't be damaged.
+	 * Leftover from Armor durability */
 	private boolean isInvulnurable()
-		{ return (WearableBackpacks.CONFIG.backpack.durability.get() == 0); }
+		{ return true; }
 	
 }

@@ -1,5 +1,6 @@
 package net.mcft.copy.backpacks.block.entity;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -13,7 +14,6 @@ import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.api.BackpackHelper;
 import net.mcft.copy.backpacks.api.IBackpack;
 import net.mcft.copy.backpacks.api.IBackpackData;
@@ -169,11 +169,11 @@ public class TileEntityBackpack extends TileEntity implements ITickable, IBackpa
 	
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		return (capability == IBackpack.CAPABILITY)
-			|| ((capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-				&& WearableBackpacks.CONFIG.enableMachineInteraction.get()
-				&& (getData() instanceof BackpackDataItems))
-			|| super.hasCapability(capability, facing);
+		return  (capability == IBackpack.CAPABILITY)
+				||
+				(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && ModConfig.server.enableMachineInteraction && getData() instanceof BackpackDataItems)
+				||
+				(super.hasCapability(capability, facing));
 	}
 	
 	@Override

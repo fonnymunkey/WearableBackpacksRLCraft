@@ -1,5 +1,6 @@
 package net.mcft.copy.backpacks.client;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -198,7 +199,7 @@ public final class RendererBackpack {
 	                                    float ticks, boolean renderStraps) {
 		
 		Minecraft mc = Minecraft.getMinecraft();
-		float glintStrength = WearableBackpacks.CONFIG.cosmetic.enchantEffectOpacity.get().floatValue();
+		float glintStrength = (float)ModConfig.client.enchantEffectOpacity;
 		if (glintStrength <= 0) return;
 		float glintScale   = 1.5F;
 		float animProgress = ticks / 10;

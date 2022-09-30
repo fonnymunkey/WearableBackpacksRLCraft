@@ -1,8 +1,8 @@
 package net.mcft.copy.backpacks.misc;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -43,7 +43,7 @@ public class BackpackCapability implements IBackpack {
 	public int lidTicks       = 0;
 	public int prevLidTicks   = 0;
 	
-	/** This is also null if the backpack is not equipped to the chestplate slot. */
+	/** This is also null if the backpack is not equipped to the bauble slot. */
 	public IBackpackType lastType = null;
 	/** Set to a backpack registry entry if the entity is meant to be spawned with a backpack. */
 	public BackpackEntry spawnWith = null;
@@ -56,10 +56,10 @@ public class BackpackCapability implements IBackpack {
 
 	public BackpackCapability(EntityLivingBase entity) { this.entity = entity; }
 	
-	/** Returns if the entity is wearing the backpack in the chest armor slot. */
-	public boolean isChestArmor() {
-		return ((lastType != null) || (BackpackHelper.getBackpackType(
-			entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST)) != null));
+	/** Returns if the entity is wearing the backpack in the bauble slot. */
+	public boolean isBauble() {
+		return  (lastType != null) ||
+				(entity instanceof EntityPlayer && BackpackHelper.getBackpackType(BackpackHelper.getBackpackBaubleSlotItemStack((EntityPlayer)entity)) != null);
 	}
 	
 	// IBackpack implementation
@@ -67,27 +67,22 @@ public class BackpackCapability implements IBackpack {
 	@Override
 	public ItemStack getStack() {
 		if (!stack.isEmpty()) return stack;
-		ItemStack chestArmor = entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
-		return ((BackpackHelper.getBackpackType(chestArmor) != null) ? chestArmor : ItemStack.EMPTY);
+		return (entity instanceof EntityPlayer && BackpackHelper.getBackpackType(BackpackHelper.getBackpackBaubleSlotItemStack((EntityPlayer)entity)) != null) ? BackpackHelper.getBackpackBaubleSlotItemStack((EntityPlayer)entity) : ItemStack.EMPTY;
 	}
 	
 	@Override
 	public void setStack(ItemStack value) {
-		boolean setChestArmor = !value.isEmpty()
-			// If backpack is being set, use equipAsChestArmor to
-			// determine whether the chest armor slot is set or not.
-			? BackpackHelper.equipAsChestArmor
-			// If being removed, use whether it actually is equipped there.
-			: isChestArmor();
+		//If a player, if value isn't empty, equip as a bauble if the config is set to use baubles, if it is empty, empty the bauble slot if it is filled
+		boolean setBauble = entity instanceof EntityPlayer && (!value.isEmpty() ? ModConfig.server.equipAsBauble : isBauble());
 		
-		if (setChestArmor) {
+		if(setBauble) {
 			stack = ItemStack.EMPTY;
 			lastType = BackpackHelper.getBackpackType(value);
-			entity.setItemStackToSlot(EntityEquipmentSlot.CHEST, value);
-			
+
+			BackpackHelper.setBackpackBaubleSlotItemStack((EntityPlayer)entity, value);
+
 			// Send the updated equipment to all players.
-			if (entity instanceof EntityPlayer)
-				((EntityPlayer)entity).inventoryContainer.detectAndSendChanges();
+			((EntityPlayer)entity).inventoryContainer.detectAndSendChanges();
 		} else {
 			stack = value;
 			lastType = null;
@@ -182,8 +177,8 @@ public class BackpackCapability implements IBackpack {
 		public NBTTagCompound serializeNBT() {
 			return NbtUtils.createCompound(
 				TAG_STACK, ((!backpack.stack.isEmpty()) ? backpack.stack.serializeNBT() : null),
-				// If the backpack is stored in the chest armor slot, we need to save the item. See deserializeNBT.
-				TAG_TYPE, (backpack.isChestArmor() ? backpack.getStack().getItem().getRegistryName().toString() : null),
+				// If the backpack is stored in the bauble slot, we need to save the item. See deserializeNBT.
+				TAG_TYPE, (backpack.isBauble() ? backpack.getStack().getItem().getRegistryName().toString() : null),
 				TAG_DATA, ((backpack.data != null) ? backpack.data.serializeNBT() : null),
 				TAG_MAY_DESPAWN, (backpack.mayDespawn ? (byte)1 : null));
 		}
@@ -212,9 +207,11 @@ public class BackpackCapability implements IBackpack {
 			backpack.setStack(stack);
 			
 			IBackpackType type;
-			if (stack.isEmpty()) {
-				// Try to get the backpack type from the chestplate slot.
-				stack = backpack.entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
+			if(stack.isEmpty()) {
+				if(backpack.entity instanceof EntityPlayer) {
+					// Try to get the backpack type from the bauble slot if entity is a player
+					stack = BackpackHelper.getBackpackBaubleSlotItemStack((EntityPlayer)backpack.entity);
+				}
 				backpack.lastType = type = BackpackHelper.getBackpackType(stack);
 				if (type == null) return; // No backpack equipped.
 			} else type = BackpackHelper.getBackpackType(stack);

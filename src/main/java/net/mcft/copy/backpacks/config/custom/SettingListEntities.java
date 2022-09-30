@@ -1,5 +1,7 @@
 package net.mcft.copy.backpacks.config.custom;
 
+/*
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +20,6 @@ import net.mcft.copy.backpacks.api.BackpackRegistry.BackpackEntityEntry;
 import net.mcft.copy.backpacks.api.BackpackRegistry.BackpackEntry;
 import net.mcft.copy.backpacks.api.BackpackRegistry.ColorRange;
 import net.mcft.copy.backpacks.api.BackpackRegistry.RenderOptions;
-import net.mcft.copy.backpacks.config.Setting;
 import net.mcft.copy.backpacks.misc.util.NbtUtils;
 import net.mcft.copy.backpacks.misc.util.NbtUtils.NbtType;
 
@@ -157,10 +158,12 @@ public class SettingListEntities extends Setting<List<BackpackEntityEntry>> {
 			nbt.getDouble(TAG_ROTATE),
 			nbt.getDouble(TAG_SCALE));
 	}
+
+ */
 	
 	// BackpackEntry
 	
-	/* Entries don't need to be synchronized to clients.
+	/** Entries don't need to be synchronized to clients.
 	 * Leaving this in for the sake of completion - or if needed in the future.
 	public static final String TAG_BACKPACK_ID = "id";
 	public static final String TAG_BACKPACK    = "backpack";
@@ -190,7 +193,8 @@ public class SettingListEntities extends Setting<List<BackpackEntityEntry>> {
 				: null);
 	}
 	*/
-	
+
+	/*
 	private static final String SEPERATOR       = ",";
 	private static final String ID_SEPERATOR    = "=";
 	private static final String COLOR_SEPERATOR = "~";
@@ -241,3 +245,4 @@ public class SettingListEntities extends Setting<List<BackpackEntityEntry>> {
 	}
 	
 }
+*/

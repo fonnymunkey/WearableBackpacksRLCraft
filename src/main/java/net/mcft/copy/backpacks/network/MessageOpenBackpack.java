@@ -2,12 +2,12 @@ package net.mcft.copy.backpacks.network;
 
 import io.netty.buffer.ByteBuf;
 
+import net.mcft.copy.backpacks.config.ModConfig;
 import net.minecraft.entity.player.EntityPlayer;
 
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.api.BackpackHelper;
 import net.mcft.copy.backpacks.api.IBackpack;
 
@@ -28,8 +28,7 @@ public class MessageOpenBackpack implements IMessage {
 		public void handle(MessageOpenBackpack message, MessageContext ctx) {
 			EntityPlayer player = getPlayer(ctx);
 			IBackpack backpack = BackpackHelper.getBackpack(player);
-			if ((backpack != null) && player.isEntityAlive() &&
-			    WearableBackpacks.CONFIG.enableSelfInteraction.get())
+			if(backpack != null && player.isEntityAlive() && ModConfig.server.enableSelfInteraction)
 				backpack.getType().onEquippedInteract(player, player, backpack);
 		}
 	}
