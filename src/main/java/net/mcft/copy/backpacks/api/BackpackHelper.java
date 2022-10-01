@@ -34,7 +34,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class BackpackHelper {
 	
 	private BackpackHelper() {  }
-	
+
+	/** Don't touch, kept for compat with CorpseComplex */
+	public static boolean equipAsChestArmor = false;
 	
 	/** The maximum distance from which an equipped backpack can be opened. */
 	public static double INTERACT_MAX_DISTANCE = 1.8;
@@ -162,67 +164,61 @@ public final class BackpackHelper {
 		IBlockState state = block.getStateForPlacement(
 			world, pos, EnumFacing.UP, 0.5F, 0.5F, 0.5F,
 			item.getMetadata(stack.getMetadata()), player, EnumHand.MAIN_HAND);
+		if (!world.setBlockState(pos, state, 3) ||
+				(world.getBlockState(pos).getBlock() != block)) return false;
+		block.onBlockPlacedBy(world, pos, state, entity, stack);
 
-		//Actually attempt place the block
-		if(!world.setBlockState(pos, state, 3)) return false;
-
-		if(world.getBlockState(pos).getBlock() == block) {
-			// This is used to transfer the BlockEntityTag from Ctrl+pick-blocking to the world.
-			boolean alreadyConfigured = ItemBlock.setTileEntityNBT(world, player, pos, stack);
-			//Update rotations
-			block.onBlockPlacedBy(world, pos, state, entity, stack);
-
-			TileEntity tileEntity = world.getTileEntity(pos);
-			if(tileEntity != null) {
-				IBackpack placedBackpack = BackpackHelper.getBackpack(tileEntity);
-				if(placedBackpack != null) {
-					IBackpack carrierBackpack = BackpackHelper.getBackpack(entity);
-					boolean isEquipped = ((carrierBackpack != null) && (carrierBackpack.getStack() == stack));
-
-					// Create a copy of the stack with stackSize set to 1 and transfer it.
-					ItemStack stackCopy = stack.copy();
-					stackCopy.setCount(1);
-					if (stackCopy.hasTagCompound() && stackCopy.getTagCompound().hasKey("BlockEntityTag")) {
-						stackCopy.getTagCompound().removeTag("BlockEntityTag");
-					}
-					placedBackpack.setStack(stackCopy);
-
-					if (!alreadyConfigured) {
-						// If the carrier had the backpack equipped, transfer data and unequip.
-						if (isEquipped) {
-
-							IBackpackType type = carrierBackpack.getType();
-							IBackpackData data = carrierBackpack.getData();
-							if ((data == null) && !world.isRemote) {
-								LOG.error("Backpack data was null when placing down equipped backpack");
-								data = type.createBackpackData(stackCopy);
-							}
-
-							placedBackpack.setData(data);
-
-							if (!world.isRemote)
-								BackpackHelper.setEquippedBackpack(entity, ItemStack.EMPTY, null);
-
-							type.onUnequip(entity, tileEntity, placedBackpack);
-
-							// Otherwise create a fresh backpack data on the server.
-						} else if (!world.isRemote) placedBackpack.setData(
-								placedBackpack.getType().createBackpackData(stackCopy));
-					}
-				}
-			}
-		}
 		double x = pos.getX() + 0.5;
 		double y = pos.getY() + 0.5;
 		double z = pos.getZ() + 0.5;
 		SoundType sound = block.getSoundType(state, world, pos, entity);
 		world.playSound(x, y, z, sound.getPlaceSound(), SoundCategory.BLOCKS,
-		                (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F, false);
-		
-		// We only shrink the original stack here instead of earlier
-		// as its information is still needed for other checks, and
-		// shrinking it from 1 to 0 would effectively empty the stack.
-		stack.shrink(1);
+				(sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F, false);
+
+		// This is used to transfer the BlockEntityTag from Ctrl+pick-blocking to the world.
+		boolean alreadyConfigured = ItemBlock.setTileEntityNBT(world, player, pos, stack);
+
+		TileEntity tileEntity = world.getTileEntity(pos);
+		if (tileEntity == null) return true;
+		IBackpack placedBackpack = BackpackHelper.getBackpack(tileEntity);
+		if (placedBackpack == null) return true;
+
+		IBackpack carrierBackpack = BackpackHelper.getBackpack(entity);
+		boolean isEquipped = ((carrierBackpack != null) && (carrierBackpack.getStack() == stack));
+
+		ItemStack stackOrig = stack;
+		// Create a copy of the stack with stackSize set to 1 and transfer it.
+		stack = stack.copy();
+		stack.setCount(1);
+		if (stack.hasTagCompound() && stack.getTagCompound().hasKey("BlockEntityTag")) {
+			stack.getTagCompound().removeTag("BlockEntityTag");
+		}
+		placedBackpack.setStack(stack);
+
+		if (!alreadyConfigured) {
+			// If the carrier had the backpack equipped, transfer data and unequip.
+			if (isEquipped) {
+
+				IBackpackType type = carrierBackpack.getType();
+				IBackpackData data = carrierBackpack.getData();
+				if ((data == null) && !world.isRemote) {
+					LOG.error("Backpack data was null when placing down equipped backpack");
+					data = type.createBackpackData(stack);
+				}
+
+				placedBackpack.setData(data);
+
+				if (!world.isRemote)
+					BackpackHelper.setEquippedBackpack(entity, ItemStack.EMPTY, null);
+
+				type.onUnequip(entity, tileEntity, placedBackpack);
+
+				// Otherwise create a fresh backpack data on the server.
+			} else if (!world.isRemote) placedBackpack.setData(
+					placedBackpack.getType().createBackpackData(stack));
+		}
+
+		stackOrig.shrink(1);
 		return true;
 	}
 	

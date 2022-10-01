@@ -138,6 +138,12 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 			catch (Exception ex) {  } // Ignore NBT parse exceptions - they're already logged in createBackpackData.
 		
 	}
+
+	//Soulbound compat in CorseComplex doesn't work for this fork, disallow enchanting
+	@Override
+	public boolean isEnchantable(ItemStack stack) {
+		return false;
+	}
 	
 	// Item events
 	

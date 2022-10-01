@@ -118,6 +118,7 @@ public class BlockBackpack extends BlockContainer {
 			((TileEntityBackpack)tileEntity).facing = placer.getHorizontalFacing();
 	}
 
+	//TODO: Fix unshift crash
 	@Override
 	@SuppressWarnings("deprecation")
 	public float getPlayerRelativeBlockHardness(IBlockState state, EntityPlayer player, World worldIn, BlockPos pos) {
