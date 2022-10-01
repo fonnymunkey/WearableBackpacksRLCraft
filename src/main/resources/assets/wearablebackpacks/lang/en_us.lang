@@ -24,6 +24,8 @@ config.wearablebackpacks.general.enableMachineInteraction=Enable Machine Interac
 config.wearablebackpacks.general.enableMachineInteraction.tooltip=Controls whether machines (such as hoppers) can interact with placed backpacks.
 config.wearablebackpacks.general.dropAsBlockOnDeath=Drop as Block on Death
 config.wearablebackpacks.general.dropAsBlockOnDeath.tooltip=Controls whether backpacks place themselves down upon death, instead of scattering their contents.
+config.wearablebackpacks.general.ignoreCancellation=Backpack Ignore Cancellation
+config.wearablebackpacks.general.ignoreCancellation.tooltip=Should backpack placement and breaking attempt to ignore event cancellation? (Patches Lycanite's boss arena voiding backpacks)
 
 config.wearablebackpacks.size.sizeColumn=Backpack Size Column
 config.wearablebackpacks.size.sizeColumn.tooltip=Column size of a normal backpack. Does not affect placed or equipped backpacks until turned back into an item.

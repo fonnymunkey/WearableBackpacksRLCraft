@@ -25,7 +25,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import net.mcft.copy.backpacks.ProxyClient;
-import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.api.BackpackHelper;
 import net.mcft.copy.backpacks.api.BackpackRegistry;
 import net.mcft.copy.backpacks.api.IBackpack;
@@ -103,7 +102,8 @@ public final class RendererBackpack {
 				renderOptions = _overrideRenderOptions;
 			} else {
 				backpack = BackpackHelper.getBackpack(entity);
-				BackpackEntityEntry entry = BackpackRegistry.getEntityEntry(entity.getClass());
+				//BackpackEntityEntry entry = BackpackRegistry.getEntityEntry(entity.getClass());
+				BackpackEntityEntry entry = BackpackRegistry.getDefaultEntityEntry(entity.getClass());
 				renderOptions = (entry != null) ? entry.renderOptions : null;
 			}
 			if ((backpack == null) || (renderOptions == null)) return;

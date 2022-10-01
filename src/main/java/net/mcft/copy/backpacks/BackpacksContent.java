@@ -1,5 +1,6 @@
 package net.mcft.copy.backpacks;
 
+import net.mcft.copy.backpacks.config.EntityListConfig;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -17,50 +18,57 @@ import net.mcft.copy.backpacks.block.BlockBackpack;
 import net.mcft.copy.backpacks.block.entity.TileEntityBackpack;
 import net.mcft.copy.backpacks.item.ItemBackpack;
 import net.mcft.copy.backpacks.item.recipe.RecipeDyeableItem;
+import org.apache.logging.log4j.Level;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 public class BackpacksContent {
 	
 	public static ItemBackpack BACKPACK;
 	
 	public BackpacksContent() {
+
 		BACKPACK = new ItemBackpack();
 	}
 	
 	@SubscribeEvent
 	public void onRegisterBlocks(RegistryEvent.Register<Block> event) {
-		if (BACKPACK != null) {
-			event.getRegistry().register(
-				new BlockBackpack().setRegistryName(WearableBackpacks.MOD_ID, "backpack"));
-			GameRegistry.registerTileEntity(TileEntityBackpack.class, new ResourceLocation(WearableBackpacks.MOD_ID, "backpack"));
-		}
+		event.getRegistry().register(new BlockBackpack().setRegistryName(WearableBackpacks.MOD_ID, "backpack"));
+		GameRegistry.registerTileEntity(TileEntityBackpack.class, new ResourceLocation(WearableBackpacks.MOD_ID, "backpack"));
 	}
 	
 	@SubscribeEvent
 	public void onRegisterItems(RegistryEvent.Register<Item> event) {
-		if (BACKPACK != null) {
-			event.getRegistry().register(
-				BACKPACK.setRegistryName(WearableBackpacks.MOD_ID, "backpack"));
-			
-			BackpackRegistry.registerEntity("minecraft:zombie",        RenderOptions.DEFAULT);
-			BackpackRegistry.registerEntity("minecraft:skeleton",      RenderOptions.DEFAULT);
-			BackpackRegistry.registerEntity("minecraft:zombie_pigman", RenderOptions.DEFAULT);
-			
-			String backpack  = BACKPACK.getRegistryName().toString();
-			String idDefault = WearableBackpacks.MOD_ID + ":default";
-			String idColored = WearableBackpacks.MOD_ID + ":colored";
-			String lootTable = ItemBackpack.LOOT_TABLE.toString();
-			
-			BackpackRegistry.registerBackpack("minecraft:zombie",        idDefault, backpack,   800, lootTable, null);
-			BackpackRegistry.registerBackpack("minecraft:zombie",        idColored, backpack,  8000, lootTable, ColorRange.DEFAULT);
-			BackpackRegistry.registerBackpack("minecraft:skeleton",      idDefault, backpack,  1200, lootTable, null);
-			BackpackRegistry.registerBackpack("minecraft:skeleton",      idColored, backpack, 12000, lootTable, ColorRange.DEFAULT);
-			BackpackRegistry.registerBackpack("minecraft:zombie_pigman", idColored, backpack,  1000, lootTable, ColorRange.DEFAULT);
-			
-			// TODO: Register all loot tables mentioned in config file?
-			LootTableList.register(ItemBackpack.LOOT_TABLE);
+		event.getRegistry().register(BACKPACK.setRegistryName(WearableBackpacks.MOD_ID, "backpack"));
+
+		//May as well keep backpack entity registering in the same place
+		String backpack  = BACKPACK.getRegistryName().toString();
+		String idDefault = WearableBackpacks.MOD_ID + ":default";
+		String idColored = WearableBackpacks.MOD_ID + ":colored";
+
+		if(EntityListConfig.getEntityList() != null && EntityListConfig.getBackpackList() != null) {
+			for(Map.Entry<String, RenderOptions> entry : EntityListConfig.getEntityList().entrySet()) {
+				BackpackRegistry.registerEntity(entry.getKey(), entry.getValue());
+			}
+			for(Map.Entry<String, ArrayList<String[]>> entry : EntityListConfig.getBackpackList().entrySet()) {
+				for(String[] subEntry : entry.getValue()) {
+					try {
+						boolean colored = Boolean.parseBoolean(subEntry[0]);
+						int chance = Integer.parseInt(subEntry[1]);
+						String loottable = subEntry[2];
+						BackpackRegistry.registerBackpack(entry.getKey(), colored ? idColored : idDefault, backpack, chance, loottable, colored ? ColorRange.DEFAULT : null);
+					}
+					catch(Exception ex) {
+						WearableBackpacks.LOG.log(Level.ERROR, WearableBackpacks.MOD_ID + ": " + "Failed to parse entity backpack list entry: " + ex);
+						break;
+					}
+				}
+			}
 		}
-		
-		// BackpackRegistry.registerBackpackEntity(EntityEnderman.class, ENDER_BACKPACK, 1.0 / 80);
+
+		// TODO: Register all loot tables mentioned in config file?
+		LootTableList.register(ItemBackpack.LOOT_TABLE);
 	}
 	
 	public void registerRecipes() {

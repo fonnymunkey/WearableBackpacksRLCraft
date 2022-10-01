@@ -46,6 +46,10 @@ public class ModConfig {
         @Config.LangKey("config.wearablebackpacks.general.dropAsBlockOnDeath")
         public boolean dropAsBlockOnDeath = true;
 
+        @Config.Comment("Should backpack placement and breaking attempt to ignore event cancellation? (Patches Lycanite's boss arena voiding backpacks)")
+        @Config.Name("Backpack Ignore Cancellation")
+        @Config.LangKey("config.wearablebackpacks.general.ignoreCancellation")
+        public boolean ignoreCancellation = false;
         @Config.Comment("Column size of a normal backpack. Does not affect placed or equipped backpacks until turned back into an item.")
         @Config.Name("Backpack Size Column")
         @Config.LangKey("config.wearablebackpacks.size.sizeColumn")

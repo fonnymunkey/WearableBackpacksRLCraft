@@ -11,7 +11,11 @@ import net.mcft.copy.backpacks.misc.util.MiscUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.SPacketEntityEquipment;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -25,6 +29,8 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent.CheckSpawn;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -98,7 +104,18 @@ public class ProxyCommon {
 		if(!(event.isSpawner() ? ModConfig.server.spawnFromSpawners : ModConfig.server.spawnNaturally)) return;
 		EntityLivingBase entity = event.getEntityLiving();
 
+		/*
 		for (BackpackEntry entry : BackpackRegistry.getBackpackEntries(entity.getClass())) {
+			if ((entry.chance == 0) || (entity.world.rand.nextDouble() > (1.0 / entry.chance))) continue;
+			BackpackCapability backpack = (BackpackCapability)entity.getCapability(IBackpack.CAPABILITY, null);
+			// Set the backpack capability of the entity to spawn with the specified backpack.
+			// This will be delayed until the first update tick to fire after armor has been generated.
+			backpack.spawnWith = entry;
+			break;
+		}
+		*/
+		//Just use default entries
+		for (BackpackEntry entry : BackpackRegistry.getDefaultBackpackEntries(entity.getClass())) {
 			if ((entry.chance == 0) || (entity.world.rand.nextDouble() > (1.0 / entry.chance))) continue;
 			BackpackCapability backpack = (BackpackCapability)entity.getCapability(IBackpack.CAPABILITY, null);
 			// Set the backpack capability of the entity to spawn with the specified backpack.
@@ -157,18 +174,54 @@ public class ProxyCommon {
 		// care of setting the tile entity stack and data as well as unequipping.
 		// See ItemBackpack.onItemUse.
 		player.inventory.mainInventory.set(player.inventory.currentItem, backpack.getStack());
-		if (backpack.getStack().onItemUse(
-				player, world, event.getPos(), EnumHand.MAIN_HAND,
-				event.getFace(), 0.5F, 0.5F, 0.5F) == EnumActionResult.SUCCESS) {
-
+		if(backpack.getStack().onItemUse(player, world, event.getPos(), EnumHand.MAIN_HAND, event.getFace(), 0.5F, 0.5F, 0.5F) == EnumActionResult.SUCCESS) {
 			player.swingArm(EnumHand.MAIN_HAND);
 			event.setCanceled(true);
 			cancelOffHand = true;
+		}
+		else {
+			player.inventory.mainInventory.set(player.inventory.currentItem, ItemStack.EMPTY);
+		}
 
-		} else player.inventory.mainInventory.set(player.inventory.currentItem, ItemStack.EMPTY);
 
 	}
 
+	//Catch if a backpack placing was cancelled, uncancel it
+	//Lycanites cancels this event in boss areas which causes the backpack to be voided
+	@SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+	public void onBlockPlace(BlockEvent.PlaceEvent event) {
+		if(event.getState() == null || event.getWorld() == null || event.getWorld().isRemote || event.getPlayer() == null || !event.isCanceled() || !ModConfig.server.ignoreCancellation) return;
+
+		TileEntity tileEntity = event.getWorld().getTileEntity(event.getPos());
+		if(tileEntity != null) {
+			IBackpack placedBackpack = BackpackHelper.getBackpack(tileEntity);
+			if(placedBackpack != null) {
+				//If the event is cancelled, but backpack placement was attempted, uncancel it
+				//Surely this won't cause any possible wierd conflicts : )
+				event.setCanceled(false);
+			}
+		}
+		//Update hand to prevent desyncing even if not a backpack, because Lycanites doesn't
+		EntityEquipmentSlot slot = event.getHand().equals(EnumHand.MAIN_HAND) ? EntityEquipmentSlot.MAINHAND : EntityEquipmentSlot.OFFHAND;
+		((EntityPlayerMP)event.getPlayer()).connection.sendPacket(new SPacketEntityEquipment(event.getPlayer().getEntityId(), slot, event.getPlayer().getItemStackFromSlot(slot)));
+	}
+
+	//Catch if a backpack breaking was cancelled, uncancel it
+	//Lycanites cancels this event in boss areas, which can cause the backpack to become trapped
+	@SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+	public void onBlockBreak(BlockEvent.BreakEvent event) {
+		if(event.getState() == null || event.getWorld() == null || event.getWorld().isRemote || event.getPlayer() == null || !event.isCanceled() || !ModConfig.server.ignoreCancellation) return;
+
+		TileEntity tileEntity = event.getWorld().getTileEntity(event.getPos());
+		if(tileEntity != null) {
+			IBackpack placedBackpack = BackpackHelper.getBackpack(tileEntity);
+			if(placedBackpack != null) {
+				//If the event is cancelled, but backpack break was attempted, uncancel it
+				//Surely this won't cause any possible wierd conflicts : )
+				event.setCanceled(false);
+			}
+		}
+	}
 	@SubscribeEvent
 	public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
 

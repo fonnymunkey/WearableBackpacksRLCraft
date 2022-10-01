@@ -76,12 +76,10 @@ public class ProxyClient extends ProxyCommon {
 	public void init() {
 		super.init();
 		Minecraft mc = Minecraft.getMinecraft();
-		
-		if (BackpacksContent.BACKPACK != null) {
-			mc.getBlockColors().registerBlockColorHandler(BLOCK_COLOR, MiscUtils.getBlockFromItem(BackpacksContent.BACKPACK));
-			mc.getItemColors().registerItemColorHandler(ITEM_COLOR, BackpacksContent.BACKPACK);
-			ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBackpack.class, new RendererBackpack.TileEntity());
-		}
+
+		mc.getBlockColors().registerBlockColorHandler(BLOCK_COLOR, MiscUtils.getBlockFromItem(BackpacksContent.BACKPACK));
+		mc.getItemColors().registerItemColorHandler(ITEM_COLOR, BackpacksContent.BACKPACK);
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBackpack.class, new RendererBackpack.TileEntity());
 		
 		RenderManager manager = mc.getRenderManager();
 		Map<String, RenderPlayer> skinMap = manager.getSkinMap();
@@ -92,11 +90,16 @@ public class ProxyClient extends ProxyCommon {
 	
 	@Override
 	public void initBackpackLayers() {
-		// A for loop would be one less line.. but streams are pretty! >.<
+		/*
 		BackpackRegistry.getEntityEntries().stream()
 			.map(BackpackEntityEntry::getEntityClass)
 			.filter(Objects::nonNull)
 			.forEach(ProxyClient::ensureHasBackpackLayer);
+		*/
+		BackpackRegistry.getDefaultEntityEntries().stream()
+				.map(BackpackEntityEntry::getEntityClass)
+				.filter(Objects::nonNull)
+				.forEach(ProxyClient::ensureHasBackpackLayer);
 	}
 	
 	private static final Set<Class<? extends EntityLivingBase>> _hasLayerChecked = new HashSet<>();
@@ -139,10 +142,7 @@ public class ProxyClient extends ProxyCommon {
 	
 	@SubscribeEvent
 	public void onRegisterModels(ModelRegistryEvent event) {
-		if (BackpacksContent.BACKPACK != null) {
-			ModelLoader.setCustomModelResourceLocation(BackpacksContent.BACKPACK, 0,
-				new ModelResourceLocation("wearablebackpacks:backpack", "inventory"));
-		}
+		ModelLoader.setCustomModelResourceLocation(BackpacksContent.BACKPACK, 0, new ModelResourceLocation("wearablebackpacks:backpack", "inventory"));
 	}
 	
 	private static class ModelAABBCalculator implements IVertexConsumer {

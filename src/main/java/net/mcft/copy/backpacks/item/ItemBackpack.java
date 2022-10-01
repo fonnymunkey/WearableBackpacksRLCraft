@@ -17,11 +17,11 @@ import net.mcft.copy.backpacks.misc.BackpackSize;
 import net.mcft.copy.backpacks.misc.util.LangUtils;
 import net.mcft.copy.backpacks.misc.util.NbtUtils;
 import net.mcft.copy.backpacks.misc.util.WorldUtils;
+import net.minecraft.block.material.MaterialLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -38,7 +38,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.logging.log4j.Level;
 
 import java.util.List;
 
@@ -148,18 +147,21 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 		IBlockState state = worldIn.getBlockState(pos);
 		// If the block is replaceable, keep the placing position
 		// the same but check the block below for solidity.
-		if (state.getBlock().isReplaceable(worldIn, pos))
+		if(state.getBlock().isReplaceable(worldIn, pos)) {
 			state = worldIn.getBlockState(pos.offset(EnumFacing.DOWN));
+			if(!state.isSideSolid(worldIn, pos, EnumFacing.UP)) return EnumActionResult.FAIL;
+		}
 		// Otherwise make sure the top side is used, and
 		// change the placing position to the block above.
 		else if (facing == EnumFacing.UP)
 			pos = pos.offset(EnumFacing.UP);
 		else return EnumActionResult.FAIL;
-		
-		// Check if the side is solid and try to place the backpack.
-		return (state.isSideSolid(worldIn, pos, EnumFacing.UP) &&
-		        BackpackHelper.placeBackpack(worldIn, pos, player.getHeldItem(hand), player, false))
-			? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+
+		//Don't place in liquids, for SimpleDifficulty compat
+		if(worldIn.getBlockState(pos).getMaterial() instanceof MaterialLiquid) return EnumActionResult.FAIL;
+
+		return BackpackHelper.placeBackpack(worldIn, pos, player.getHeldItem(hand), player, false)
+				? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
 	}
 	
 	@Override

@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -70,27 +69,40 @@ public final class BackpackRegistry {
 	 *  This affects whether the entity will be constructed with an IBackpack capability. */
 	public static boolean canEntityWearBackpacks(Entity entity) {
 		return (entity != null) && EntityLivingBase.class.isAssignableFrom(entity.getClass())
-			&& (getEntityEntry(entity.getClass().asSubclass(EntityLivingBase.class)) != null);
+			&& (getDefaultEntityEntry(entity.getClass().asSubclass(EntityLivingBase.class)) != null);
 	}
-	
+
+	/*
+	public static boolean canEntityWearBackpacks(Entity entity) {
+		return (entity != null) && EntityLivingBase.class.isAssignableFrom(entity.getClass())
+				&& (getEntityEntry(entity.getClass().asSubclass(EntityLivingBase.class)) != null);
+	}
+	*/
 	
 	// Internal / semi-internal stuff
 	
 	private static final List<BackpackEntityEntry> _defaultEntities = new ArrayList<>();
-	private static final List<BackpackEntityEntry> _entities = new ArrayList<>();
+	//private static final List<BackpackEntityEntry> _entities = new ArrayList<>();
 	private static final Map<String, Optional<Class<? extends EntityLivingBase>>> _entityClassLookupCache = new HashMap<>();
 	private static Map<Class<? extends EntityLivingBase>, BackpackEntityEntry> _entityEntryLookupCache = null;
 	
-	public static List<BackpackEntityEntry> getEntityEntries()
-		{ return Collections.unmodifiableList(_entities); }
-	public static List<BackpackEntityEntry> getDefaultEntityEntries()
-		{ return Collections.unmodifiableList(_defaultEntities); }
+	//public static List<BackpackEntityEntry> getEntityEntries() { return Collections.unmodifiableList(_entities); }
+	public static List<BackpackEntityEntry> getDefaultEntityEntries() { return Collections.unmodifiableList(_defaultEntities); }
 	
-	public static BackpackEntityEntry getEntityEntry(String entityID)
-		{ return _entities.stream().filter(e -> e.entityID.equals(entityID)).findAny().orElse(null); }
-	public static BackpackEntityEntry getDefaultEntityEntry(String entityID)
-		{ return _defaultEntities.stream().filter(e -> e.entityID.equals(entityID)).findAny().orElse(null); }
-	
+	//public static BackpackEntityEntry getEntityEntry(String entityID) { return _entities.stream().filter(e -> e.entityID.equals(entityID)).findAny().orElse(null); }
+	public static BackpackEntityEntry getDefaultEntityEntry(String entityID) { return _defaultEntities.stream().filter(e -> e.entityID.equals(entityID)).findAny().orElse(null); }
+
+	public static BackpackEntityEntry getDefaultEntityEntry(Class<? extends EntityLivingBase> entityClass) {
+		if(EntityPlayer.class.isAssignableFrom(entityClass)) return BackpackEntityEntry.PLAYER;
+		if(_entityEntryLookupCache == null)
+			_entityEntryLookupCache = ForgeRegistries.ENTITIES.getEntries().stream()
+					.map(e -> new AbstractMap.SimpleEntry<>(e.getValue().getEntityClass(), getDefaultEntityEntry(e.getKey().toString())))
+					.filter(e -> EntityLivingBase.class.isAssignableFrom(e.getKey()) && (e.getValue() != null))
+					.collect(Collectors.toMap(e -> e.getKey().asSubclass(EntityLivingBase.class), Map.Entry::getValue));
+		return _entityEntryLookupCache.get(entityClass);
+	}
+
+	/*
 	public static BackpackEntityEntry getEntityEntry(Class<? extends EntityLivingBase> entityClass) {
 		if (EntityPlayer.class.isAssignableFrom(entityClass))
 			return BackpackEntityEntry.PLAYER;
@@ -101,11 +113,12 @@ public final class BackpackRegistry {
 				.collect(Collectors.toMap(e -> e.getKey().asSubclass(EntityLivingBase.class), Map.Entry::getValue));
 		return _entityEntryLookupCache.get(entityClass);
 	}
-	
+
 	public static void updateEntityEntries(List<BackpackEntityEntry> value) {
 		mergeEntityEntriesWithDefault(_entities, value);
 		_entityEntryLookupCache = null;
 	}
+
 	public static List<BackpackEntityEntry> mergeEntityEntriesWithDefault(List<BackpackEntityEntry> value)
 		{ return mergeEntityEntriesWithDefault(new ArrayList<>(), value); }
 	public static List<BackpackEntityEntry> mergeEntityEntriesWithDefault(
@@ -137,6 +150,13 @@ public final class BackpackRegistry {
 	public static List<BackpackEntry> getBackpackEntries(Class<? extends EntityLivingBase> entityClass) {
 		if (entityClass == null) throw new NullPointerException("entityClass must not be null");
 		BackpackEntityEntry entityEntry = getEntityEntry(entityClass);
+		return (entityEntry != null) ? entityEntry.getEntries() : Collections.emptyList();
+	}
+	*/
+
+	public static List<BackpackEntry> getDefaultBackpackEntries(Class<? extends EntityLivingBase> entityClass) {
+		if (entityClass == null) throw new NullPointerException("entityClass must not be null");
+		BackpackEntityEntry entityEntry = getDefaultEntityEntry(entityClass);
 		return (entityEntry != null) ? entityEntry.getEntries() : Collections.emptyList();
 	}
 	

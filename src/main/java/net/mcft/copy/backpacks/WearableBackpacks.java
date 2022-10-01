@@ -19,7 +19,7 @@ public class WearableBackpacks {
 	
 	public static final String MOD_ID   = "wearablebackpacks";
 	public static final String MOD_NAME = "Wearable Backpacks RLCraft";
-	public static final String VERSION  = "3.2.0";
+	public static final String VERSION  = "3.2.1";
 	
 	@Instance
 	public static WearableBackpacks INSTANCE;
@@ -49,6 +49,7 @@ public class WearableBackpacks {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		//CONFIG.init();
+		WearableBackpacks.PROXY.initBackpackLayers();
 		PROXY.init();
 	}
 	
