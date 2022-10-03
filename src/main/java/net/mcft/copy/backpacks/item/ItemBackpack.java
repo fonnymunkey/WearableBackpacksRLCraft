@@ -24,9 +24,11 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -55,8 +57,7 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 	
 	public static final String[] TAG_CUSTOM_ARMOR = { "backpack", "armor" };
 	public static final String[] TAG_CUSTOM_SIZE  = { "backpack", "size" };
-	
-	
+
 	public ItemBackpack() {
 		setTranslationKey("wearablebackpacks.backpack");
 		setMaxStackSize(1);
@@ -72,6 +73,14 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 	public static BaubleType getBaubleType() {
 		return BaubleType.BODY;
 	}
+/*
+	@Override
+	public void onWornTick(ItemStack itemstack, EntityLivingBase player) {
+		if (itemstack.func_77952_i() == 0 && player.field_70173_aa % 39 == 0) {
+			player.func_70690_d(new PotionEffect(MobEffects.field_76422_e, 40, 0, true, true));
+		}
+	}
+*/
 
 	// Let placing manually handle unequipping
 	@Override

@@ -5,6 +5,7 @@ import java.util.Random;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -29,13 +30,17 @@ import net.mcft.copy.backpacks.block.entity.TileEntityBackpack;
 import net.mcft.copy.backpacks.misc.util.LangUtils;
 import net.mcft.copy.backpacks.misc.util.MiscUtils;
 import net.mcft.copy.backpacks.misc.util.WorldUtils;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 
 public class BlockBackpack extends BlockContainer {
 
-	/** Number of ticks a backpack will be resistant
-	 *  to explosions for after being placed. */
+	/**
+	 * Number of ticks a backpack will be resistant
+	 * to explosions for after being placed.
+	 */
 	public static final int EXPLOSION_RESIST_TICKS = 10;
 
 	private final AxisAlignedBB[] _boundsFromFacing = new AxisAlignedBB[4];
@@ -61,29 +66,45 @@ public class BlockBackpack extends BlockContainer {
 	// Block properties
 
 	@Override
-	public int quantityDropped(Random random) { return 0; }
+	public int quantityDropped(Random random) {
+		return 0;
+	}
 
 	@Override
-	public boolean isOpaqueCube(IBlockState state) { return false; }
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
 
 	@Override
-	public boolean isFullCube(IBlockState state) { return false; }
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
 
 	@Override
-	public EnumBlockRenderType getRenderType(IBlockState state) { return EnumBlockRenderType.INVISIBLE; }
+	public EnumBlockRenderType getRenderType(IBlockState state) {
+		return EnumBlockRenderType.INVISIBLE;
+	}
 
 	// Block bounds
 
-	protected float getBoundsWidth() { return 12 / 16.0F; }
-	protected float getBoundsHeight() { return 13 / 16.0F; }
-	protected float getBoundsDepth() { return 10 / 16.0F; }
+	protected float getBoundsWidth() {
+		return 12 / 16.0F;
+	}
+
+	protected float getBoundsHeight() {
+		return 13 / 16.0F;
+	}
+
+	protected float getBoundsDepth() {
+		return 10 / 16.0F;
+	}
 
 	@Override
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
 		TileEntity entity = source.getTileEntity(pos);
 		EnumFacing facing = (entity instanceof TileEntityBackpack)
-			? ((TileEntityBackpack)entity).facing
-			: EnumFacing.NORTH;
+				? ((TileEntityBackpack) entity).facing
+				: EnumFacing.NORTH;
 		return _boundsFromFacing[facing.ordinal() - 2];
 	}
 
@@ -94,8 +115,8 @@ public class BlockBackpack extends BlockContainer {
 		for (int i = 0; i < _boundsFromFacing.length; i++) {
 			EnumFacing facing = EnumFacing.byIndex(i + 2);
 			_boundsFromFacing[i] = ((facing.getAxis() == Axis.Z)
-				? new AxisAlignedBB(0.5F - w / 2, 0.0F, 0.5F - d / 2, 0.5F + w / 2, h, 0.5F + d / 2)
-				: new AxisAlignedBB(0.5F - d / 2, 0.0F, 0.5F - w / 2, 0.5F + d / 2, h, 0.5F + w / 2));
+					? new AxisAlignedBB(0.5F - w / 2, 0.0F, 0.5F - d / 2, 0.5F + w / 2, h, 0.5F + d / 2)
+					: new AxisAlignedBB(0.5F - d / 2, 0.0F, 0.5F - w / 2, 0.5F + d / 2, h, 0.5F + w / 2));
 		}
 	}
 
@@ -105,20 +126,21 @@ public class BlockBackpack extends BlockContainer {
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
 		IBackpack backpack = BackpackHelper.getBackpack(world.getTileEntity(pos));
 		return (backpack != null)
-			? backpack.getStack().copy()
-			: super.getPickBlock(state, target, world, pos, player);
+				? backpack.getStack().copy()
+				: super.getPickBlock(state, target, world, pos, player);
 	}
 
 	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state,
-	                            EntityLivingBase placer, ItemStack stack) {
+								EntityLivingBase placer, ItemStack stack) {
 		// Set the facing value of the backpack when placed.
 		TileEntity tileEntity = worldIn.getTileEntity(pos);
 		if (tileEntity instanceof TileEntityBackpack)
-			((TileEntityBackpack)tileEntity).facing = placer.getHorizontalFacing();
+			((TileEntityBackpack) tileEntity).facing = placer.getHorizontalFacing();
 	}
 
-	//TODO: Fix unshift crash
+	//TODO: Fix this crash garbage
+	/*
 	@Override
 	@SuppressWarnings("deprecation")
 	public float getPlayerRelativeBlockHardness(IBlockState state, EntityPlayer player, World worldIn, BlockPos pos) {
@@ -128,9 +150,18 @@ public class BlockBackpack extends BlockContainer {
 		boolean sneaking = player.isSneaking();
 		boolean canEquip = BackpackHelper.canEquipBackpack(player);
 		return (sneaking && !canEquip)
-			? -1.0F /* Unbreakable */
-			: (hardness * (sneaking ? 4 : 1));
+				? -1.0F // Unbreakable
+				: (hardness * (sneaking ? 4 : 1));
 	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	@SideOnly(Side.CLIENT)
+	public boolean hasCustomBreakingProgress(IBlockState state)
+	{
+		return true;
+	}
+	*/
 
 	private long _lastHelpMessage = System.currentTimeMillis();
 	@Override

@@ -46,7 +46,6 @@ public class TileEntityBackpack extends TileEntity implements ITickable, IBackpa
 	
 	/** Returns the age of this backpack tile entity in ticks. */
 	public int getAge() { return _age; }
-	
 	@Override
 	public void update() {
 		_age++;

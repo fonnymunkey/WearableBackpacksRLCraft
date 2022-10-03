@@ -53,8 +53,7 @@ public final class RendererBackpack {
 		float b = (color & 0xFF) / 255.0F;
 		renderModel(backpack, renderer, ticks, renderStraps, r, g, b, false);
 		
-		if (stack.isItemEnchanted())
-			renderEnchanted(backpack, renderer, ticks, renderStraps);
+		if(stack.isItemEnchanted()) renderEnchanted(backpack, renderer, ticks, renderStraps);
 	}
 	
 	// TODO: See if this can be changed back to FastTESR?
@@ -67,7 +66,7 @@ public final class RendererBackpack {
 			IBackpack backpack = BackpackHelper.getBackpack(entity);
 			if (backpack == null) return;
 			float angle = entity.facing.getHorizontalAngle();
-			
+
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(x + 0.5, y + 0.5, z + 0.5);
 			GlStateManager.rotate(angle, 0.0F, -1.0F, 0.0F);
@@ -195,9 +194,7 @@ public final class RendererBackpack {
 	private static final ResourceLocation ENCHANTED_ITEM_GLINT =
 		new ResourceLocation("textures/misc/enchanted_item_glint.png");
 	// Based on LayerArmorBase.renderEnchantedGlint.
-	private static void renderEnchanted(IBackpack backpack, BlockModelRenderer renderer,
-	                                    float ticks, boolean renderStraps) {
-		
+	private static void renderEnchanted(IBackpack backpack, BlockModelRenderer renderer, float ticks, boolean renderStraps) {
 		Minecraft mc = Minecraft.getMinecraft();
 		float glintStrength = (float)ModConfig.client.enchantEffectOpacity;
 		if (glintStrength <= 0) return;
@@ -239,7 +236,5 @@ public final class RendererBackpack {
 		GlStateManager.enableLighting();
 		
 		mc.entityRenderer.setupFogColor(false);
-		
 	}
-	
 }

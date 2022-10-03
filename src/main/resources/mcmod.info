@@ -1,11 +1,11 @@
 [
   {
     "modid": "wearablebackpacks",
-    "name": "Wearable Backpacks RLCraft",
+    "name": "Wearable Backpacks RLCraft Edition",
     "description": "Minecraft mod which adds beautiful, balanced backpacks, forked for RLCraft.",
     "version": "${mod_version}",
     "mcversion": "${mc_version}",
-    "url": "https://www.curseforge.com/minecraft/mc-mods/wearablebackpacks-rlcraft",
+    "url": "https://www.curseforge.com/minecraft/mc-mods/wearable-backpacks-rlcraft-edition",
     "authorList": [ "copygirl", "asiekierka", "InsomniaKitten", "fonnymunkey" ],
     "logoFile": "logo.png"
   }
