@@ -2,11 +2,14 @@ package net.mcft.copy.backpacks.config;
 
 import net.mcft.copy.backpacks.WearableBackpacks;
 import net.mcft.copy.backpacks.misc.BackpackSize;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.Potion;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.logging.log4j.Level;
 
 @Config(modid = WearableBackpacks.MOD_ID)
 public class ModConfig {
@@ -20,6 +23,7 @@ public class ModConfig {
 
     public static class ServerConfig {
         private BackpackSize backpackSize;
+        private Potion backpackEffect;
 
         @Config.Comment("Whether or not the backpack should be equipped as a Bauble.")
         @Config.Name("Equip Backpack as Bauble")
@@ -72,8 +76,25 @@ public class ModConfig {
         @Config.LangKey("config.wearablebackpacks.entity.spawnFromSpawners")
         public boolean spawnFromSpawners = false;
 
+        @Config.Comment("Whether or not to apply a potion effect to the player while wearing a backpack.")
+        @Config.Name("Apply Potion Effect")
+        @Config.LangKey("config.wearablebackpacks.effect.doEffect")
+        public boolean doPotionEffect = false;
+
+        @Config.Comment("Amplifier of the potion effect to be applied to the player while wearing a backpack.")
+        @Config.Name("Potion Effect Amplifier")
+        @Config.LangKey("config.wearablebackpacks.effect.effectAmplifier")
+        @Config.RangeInt(min = 0, max = 10)
+        public int potionEffectAmplifier = 0;
+
+        @Config.Comment("The Resourcelocation of the potion effect to be applied on the player while wearing a backpack. (Ex. minecraft:weakness)")
+        @Config.Name("Potion Effect Name")
+        @Config.LangKey("config.wearablebackpacks.effect.effectName")
+        public String potionEffectName = "";
+
         public void resetCache() {
             backpackSize=null;
+            backpackEffect=null;
         }
 
         public BackpackSize getBackpackSize() {
@@ -81,6 +102,17 @@ public class ModConfig {
                 backpackSize = new BackpackSize(backpackSizeColumn, backpackSizeRow);
             }
             return backpackSize;
+        }
+
+        public Potion getBackpackEffect() {
+            if(backpackEffect==null) {
+                backpackEffect = Potion.getPotionFromResourceLocation(potionEffectName);
+                if(backpackEffect==null) {
+                    WearableBackpacks.LOG.log(Level.WARN, "WearableBackpacksRLCraft: Invalid potion effect in config, returning weakness.");
+                    backpackEffect = MobEffects.WEAKNESS;
+                }
+            }
+            return backpackEffect;
         }
     }
 

@@ -73,14 +73,13 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 	public static BaubleType getBaubleType() {
 		return BaubleType.BODY;
 	}
-/*
+
 	@Override
 	public void onWornTick(ItemStack itemstack, EntityLivingBase player) {
-		if (itemstack.func_77952_i() == 0 && player.field_70173_aa % 39 == 0) {
-			player.func_70690_d(new PotionEffect(MobEffects.field_76422_e, 40, 0, true, true));
+		if(player != null && !player.world.isRemote && player.ticksExisted % 39 == 0 && ModConfig.server.doPotionEffect) {
+			player.addPotionEffect(new PotionEffect(ModConfig.server.getBackpackEffect(), 40, ModConfig.server.potionEffectAmplifier, true, false));
 		}
 	}
-*/
 
 	// Let placing manually handle unequipping
 	@Override

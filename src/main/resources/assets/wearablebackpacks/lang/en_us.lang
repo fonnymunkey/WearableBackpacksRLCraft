@@ -39,3 +39,10 @@ config.wearablebackpacks.entity.spawnFromSpawners.tooltip=Controls whether mobs 
 
 config.wearablebackpacks.cosmetic.enchantEffectOpacity=Enchant Effect Opacity
 config.wearablebackpacks.cosmetic.enchantEffectOpacity.tooltip=Controls the opacity / visibility of the enchantment effect on equipped and placed backpacks, if present.
+
+config.wearablebackpacks.effect.doEffect=Apply Potion Effect
+config.wearablebackpacks.effect.doEffect.tooltip=Whether or not to apply a potion effect to the player while wearing a backpack.
+config.wearablebackpacks.effect.effectAmplifier=Potion Effect Amplifier
+config.wearablebackpacks.effect.effectAmplifier.tooltip=Amplifier of the potion effect to be applied to the player while wearing a backpack.
+config.wearablebackpacks.effect.effectName=Potion Effect Name
+config.wearablebackpacks.effect.effectName.tooltip=The Resourcelocation of the potion effect to be applied on the player while wearing a backpack. (Ex. minecraft:weakness)
