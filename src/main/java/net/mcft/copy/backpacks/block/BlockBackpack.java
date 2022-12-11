@@ -139,6 +139,13 @@ public class BlockBackpack extends BlockContainer {
 			((TileEntityBackpack) tileEntity).facing = placer.getHorizontalFacing();
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
+	public float getPlayerRelativeBlockHardness(IBlockState state, EntityPlayer player, World worldIn, BlockPos pos) {
+		float hardness = super.getPlayerRelativeBlockHardness(state, player, worldIn, pos);
+		return hardness * 2;
+	}
+
 	//TODO: Fix this crash garbage
 	/*
 	@Override
