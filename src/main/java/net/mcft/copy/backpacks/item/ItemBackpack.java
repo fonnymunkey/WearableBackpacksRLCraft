@@ -76,8 +76,8 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 
 	@Override
 	public void onWornTick(ItemStack itemstack, EntityLivingBase player) {
-		if(player != null && !player.world.isRemote && player.ticksExisted % 39 == 0 && ModConfig.server.doPotionEffect) {
-			player.addPotionEffect(new PotionEffect(ModConfig.server.getBackpackEffect(), 40, ModConfig.server.potionEffectAmplifier, true, false));
+		if(player != null && !player.world.isRemote && player.ticksExisted % 9 == 0 && ModConfig.server.doPotionEffect) {
+			player.addPotionEffect(new PotionEffect(ModConfig.server.getBackpackEffect(), 10, ModConfig.server.potionEffectAmplifier, true, false));
 		}
 	}
 
