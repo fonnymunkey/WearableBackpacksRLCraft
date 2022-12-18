@@ -152,6 +152,21 @@ public class ItemBackpack extends Item implements IBackpackType, IDyeableItem, I
 	public boolean isEnchantable(ItemStack stack) {
 		return false;
 	}
+
+	@Override
+	public int getItemEnchantability()
+	{
+		return 0;
+	}
+
+	@Override
+	public boolean isBookEnchantable(ItemStack stack, ItemStack book)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean canApplyAtEnchantingTable(ItemStack stack, net.minecraft.enchantment.Enchantment enchantment) { return false; }
 	
 	// Item events
 	
