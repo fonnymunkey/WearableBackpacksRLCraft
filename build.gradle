@@ -4,7 +4,7 @@ buildscript {
 		mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -13,7 +13,7 @@ version = mod_version
 group = 'net.mcft.copy.backpacks'
 archivesBaseName = "${rootProject.name}-RLCraft-$mc_version"
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
   mappings channel: 'stable', version: '39-1.12'
@@ -43,37 +43,25 @@ minecraft {
 }
 
 repositories {
-  ivy {
-    name 'asie dependency mirror'
-    artifactPattern 'http://asie.pl/javadeps/[module]-[revision](-[classifier]).[ext]'
-  }
-  maven {
-        name = 'CurseForge'
-        url = 'https://minecraft.curseforge.com/api/maven/'
+    maven {
+        url = "https://www.cursemaven.com"
     }
 }
 
 dependencies {
-  minecraft "net.minecraftforge:forge:${forge_version}"
-  
-  compile name: 'InventoryTweaks', version: "$invtweaks_version-api"
-  compile "com.azanor.baubles:Baubles:${baubles_version}"
+    minecraft "net.minecraftforge:forge:${forge_version}"
+
+    implementation fg.deobf("curse.maven:inventorytweaks-${invtweaks_version}")
+    implementation fg.deobf("curse.maven:baubles-${baubles_version}")
 }
 
-sourceSets {
-    main { output.resourcesDir = output.classesDir }
-}
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 processResources {
-  inputs.property 'mod_version', project.version
-  inputs.property "mc_version", mc_version
+    inputs.property 'mod_version', project.version
+    inputs.property "mc_version", mc_version
 
-  from(sourceSets.main.resources.srcDirs) {
-    include 'mcmod.info'
-    expand mod_version: project.version, mc_version: mc_version
-  }
-
-  from(sourceSets.main.resources.srcDirs) {
-    exclude "mcmod.info"
-  }
+    filesMatching('mcmod.info') {
+        expand 'mod_version': project.version, 'mc_version': mc_version
+    }
 }
