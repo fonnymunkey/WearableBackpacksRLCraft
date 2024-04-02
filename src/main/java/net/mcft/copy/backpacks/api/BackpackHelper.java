@@ -88,7 +88,7 @@ public final class BackpackHelper {
 
 	/** Sets the itemstack of the backpack bauble slot */
 	public static void setBackpackBaubleSlotItemStack(EntityPlayer player, ItemStack stack) {
-		((ItemStackHandler)BaublesApi.getBaublesHandler(player)).setStackInSlot(getBackpackBaubleSlotIndex(), stack);
+		BaublesApi.getBaublesHandler(player).setStackInSlot(getBackpackBaubleSlotIndex(), stack);
 	}
 
 	/** Returns the bauble slot index of the slot that can contain a backpack */
