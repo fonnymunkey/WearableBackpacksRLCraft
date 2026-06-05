@@ -47,7 +47,7 @@ public class BackpackDataItems implements IBackpackData {
 	public ItemStackHandler getItems(World world, EntityPlayer player) {
 		if (_items == null) {
 			_items = new ItemStackHandler(_size.getColumns() * _size.getRows());
-			if (_lootTable != null) {
+			if (_lootTable != null && world != null) {
 				generateLoot(_items, _lootTable, _lootTableSeed, world, player);
 				_lootTable = null;
 			}
