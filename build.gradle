@@ -43,6 +43,7 @@ minecraft {
 }
 
 repositories {
+    flatDir { dirs 'libs' }
     maven {
         url = "https://www.cursemaven.com"
     }
@@ -51,7 +52,8 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${forge_version}"
 
-    implementation fg.deobf("curse.maven:inventorytweaks-${invtweaks_version}")
+    //implementation fg.deobf("curse.maven:inventorytweaks-${invtweaks_version}")
+    implementation fg.deobf("libs:InventoryTweaks:1.64+dev.151")
     implementation fg.deobf("curse.maven:baubles-${baubles_version}")
 }
 
