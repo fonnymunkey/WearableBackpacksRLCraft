@@ -19,7 +19,7 @@ public class WearableBackpacks {
 	
 	public static final String MOD_ID   = "wearablebackpacks";
 	public static final String MOD_NAME = "Wearable Backpacks RLCraft Edition";
-	public static final String VERSION  = "3.2.7";
+	public static final String VERSION  = "3.2.8";
 	
 	@Instance
 	public static WearableBackpacks INSTANCE;
