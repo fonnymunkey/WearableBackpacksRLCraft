@@ -146,7 +146,7 @@ public class ProxyCommon {
 	}
 
 	private boolean cancelOffHand = false;
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	@SubscribeEvent
 	public void onPlayerInteractBlock(PlayerInteractEvent.RightClickBlock event) {
 
 		// This event is fired twice, once for each hand. Unfortunately there
