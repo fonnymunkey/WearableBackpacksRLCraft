@@ -160,6 +160,8 @@ public final class BackpackHelper {
 		if(ignoreEntities ? !block.canPlaceBlockAt(world, pos)
 				: !world.mayPlace(block, pos, false, EnumFacing.UP, null)) return false;
 
+		if(world.isRemote) return true;
+
 		// Actually go ahead and try to set the block in the world.
 		IBlockState state = block.getStateForPlacement(
 			world, pos, EnumFacing.UP, 0.5F, 0.5F, 0.5F,
